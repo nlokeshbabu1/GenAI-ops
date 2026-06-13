@@ -143,7 +143,7 @@ SNS_REGION=ap-south-1
 
 ```bash
 BEDROCK_MODEL_ID=mistral.ministral-3-8b-instruct
-BEDROCK_REGION=ap-south-1
+#BEDROCK_REGION=ap-south-1
 ```
 
 **To enable Bedrock:**
@@ -185,7 +185,6 @@ GenAI-ops/
 ├── build_index.py           # Index building utilities
 ├── requirements.txt         # Python dependencies
 ├── .env                     # Environment variables (do not commit)
-├── .env.example             # Environment variables template
 ├── .gitignore              # Git ignore file
 ├── LICENSE                 # Apache License 2.0
 └── README.md               # This file

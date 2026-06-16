@@ -2,6 +2,7 @@ from aiops_openserach import get_logs, get_events
 from prometheus import get_metrics
 import boto3
 import json
+import  python-dotenv
 # from gpt4all import GPT4All
 from botocore.exceptions import ClientError
 
@@ -14,12 +15,12 @@ sns = boto3.client('sns')
 
 # #sns arn
 
-TOPIC_ARN = TOPIC_ARN = 'arn:aws:sns:ap-south-1:961014542927:test'
+TOPIC_ARN = os.getenv('TOPIC_ARN', 'arn:aws:sns:ap-south-1:961014542927:test')
 
 # Initialize Bedrock client
 model = boto3.client(
     "bedrock-runtime",
-    region_name="ap-south-1"
+    region_name=os.getenv('AWS_REGION', 'ap-south-1')
 )
 
 # Fetch data
@@ -179,7 +180,8 @@ Confidence Score:
 
 def analyze(prompt):
     #step-1 model id
-    model_id = "mistral.ministral-3-8b-instruct"
+    #model_id = "mistral.ministral-3-8b-instruct"
+    model_id = os.getenv('BEDROCK_MODEL_ID', 'mistral.ministral-3-8b-instruct')
 
     #invoke the model
     try:

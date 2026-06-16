@@ -1,6 +1,7 @@
 import requests
 import urllib3
 import os
+import  python-dotenv
 #from mistralai.client import Mistral  # Reverted back to mistralai
 
 # Disable SSL warnings (lab only)

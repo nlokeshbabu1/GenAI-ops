@@ -1,0 +1,11 @@
+#gpt4all 
+sentence-transformers
+faiss-cpu
+numpy
+pickle-mixin
+tqdm
+pandas
+fastapi 
+uvicorn
+boto3
+ python-dotenv

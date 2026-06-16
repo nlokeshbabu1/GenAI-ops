@@ -1,0 +1,21 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: fluent-bit-events-role
+rules:
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: fluent-bit-events-role-binding
+subjects:
+  - kind: ServiceAccount
+    name: cloudwatch-agent  # Replace with your CloudWatch agent service account name if different
+    namespace: amazon-cloudwatch
+roleRef:
+  kind: ClusterRole
+  name: fluent-bit-events-role
+  apiGroup: rbac.authorization.k8s.io

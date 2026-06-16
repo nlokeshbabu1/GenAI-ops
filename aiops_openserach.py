@@ -1,14 +1,17 @@
 import requests
 import urllib3
 import os
-import  python-dotenv
+from dotenv import load_dotenv
 #from mistralai.client import Mistral  # Reverted back to mistralai
 
 # Disable SSL warnings (lab only)
 urllib3.disable_warnings()
 
+#Load environment variables
+load_dotenv(override=True)
+
 # OpenSearch
-OPENSEARCH_URL = os.getenv("OPENSEARCH_URL","https://search-aiops-ra6ifsz7pzm3slc3ic7kr6toqa.aos.ap-south-1.on.aws")
+OPENSEARCH_URL = os.getenv("OPENSEARCH_URL","")
 INDEX = os.getenv("INDEX","cwl-*")
 EVENT_INDEX = os.getenv("EVENT_INDEX","k8s-cluster-events")
 

@@ -2,12 +2,16 @@ from aiops_openserach import get_logs, get_events
 from prometheus import get_metrics
 import boto3
 import json
-import  python-dotenv
+import os
+from dotenv import load_dotenv  
 # from gpt4all import GPT4All
 from botocore.exceptions import ClientError
 
 # # Initialize GPT4All model
 # model = GPT4All("Meta-Llama-3-8B-Instruct.Q4_0.gguf", n_ctx=2048)
+
+#load environment variables
+load_dotenv(override=True)
 
 # #sns
 
@@ -180,7 +184,6 @@ Confidence Score:
 
 def analyze(prompt):
     #step-1 model id
-    #model_id = "mistral.ministral-3-8b-instruct"
     model_id = os.getenv('BEDROCK_MODEL_ID', 'mistral.ministral-3-8b-instruct')
 
     #invoke the model

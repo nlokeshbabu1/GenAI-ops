@@ -1,7 +1,10 @@
 import requests
 import json
 import os
-import  python-dotenv
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv(override=True)
 
 #Prometheus
 PROM_URL = os.getenv("PROM_URL","http://localhost:9090")

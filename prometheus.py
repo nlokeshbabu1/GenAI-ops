@@ -68,9 +68,15 @@ def get_metrics():
         "sum(kube_pod_container_status_restarts_total)"
     )
 
+    #latency
+    latency_seconds = query_prometheus(
+        "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))"
+    )
+
     metrics["cpu_usage_cores"] = extract_metric_value(cpu_usage_cores)
     metrics["memory_usage_bytes"] = extract_metric_value(memory_usage_bytes)
     metrics["container_restarts"] = extract_metric_value(container_restarts)
+    metrics["latency_seconds"] = extract_metric_value(latency_seconds)
 
     return metrics
 

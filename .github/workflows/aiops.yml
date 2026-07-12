@@ -20,6 +20,7 @@ jobs:
       with:
         python-version: '3.9'
     - name: Install dependencies
+      working-directory: ./AIops
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
@@ -31,7 +32,7 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    - name: step up docker
+    - name: Set up docker
       uses: docker/setup-buildx-action@v3
 
     - name: login to docker

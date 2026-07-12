@@ -39,6 +39,10 @@ metrics = get_metrics()
 
 def build_prompt(logs, events, metrics):
 
+    metric_section = "No sudden CPU, memory, or latency spikes were detected in Prometheus metrics." if not metrics.get("anomalies") else "\n".join(metrics["anomalies"])
+    logs_section = "\n".join(logs) if isinstance(logs, list) else str(logs)
+    events_section = "\n".join(events) if isinstance(events, list) else str(events)
+
     return f"""
 You are a Principal Kubernetes SRE, Platform Engineer, and AI Ops Expert.
 
@@ -48,19 +52,19 @@ Analyze the telemetry from an Amazon EKS environment.
 APPLICATION LOGS
 =================================================
 
-{logs}
+{logs_section}
 
 =================================================
 KUBERNETES EVENTS
 =================================================
 
-{events}
+{events_section}
 
 =================================================
-PROMETHEUS METRICS
+PROMETHEUS METRIC ANOMALIES
 =================================================
 
-{metrics}
+{metric_section}
 
 =================================================
 

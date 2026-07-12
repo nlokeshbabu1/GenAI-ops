@@ -1,3 +1,4 @@
+import re
 import requests
 import urllib3
 import os
@@ -18,6 +19,48 @@ EVENT_INDEX = os.getenv("EVENT_INDEX","k8s-cluster-events")
 # OpenSearch Admin Credentials
 OPENSEARCH_USER = os.getenv("OPENSEARCH_USER","admin")
 OPENSEARCH_PASSWORD = os.getenv("OPENSEARCH_PASSWORD","Admin@1234")
+
+# ==================================
+# Filtering helpers
+# ==================================
+
+def extract_log_text(source):
+    if isinstance(source, dict):
+        if "message" in source:
+            return source["message"]
+        if "log" in source:
+            return source["log"]
+        if "error" in source:
+            return str(source["error"])
+    return str(source)
+
+
+def is_relevant_log(text):
+    if not text:
+        return False
+
+    text_lower = text.lower()
+    if re.search(r"\b(http|https)\b.*\b\d{3}\b", text_lower):
+        return True
+    if re.search(r"\b(4|5)\d{2}\b", text_lower):
+        return True
+    return bool(re.search(r"\b(error|failed|failure|exception|timeout|unable|unavailable|crash|panic|denied|refused)\b", text_lower))
+
+
+def extract_event_text(source):
+    if isinstance(source, dict):
+        for key in ("message", "reason", "log", "status", "type"):
+            if key in source and source[key]:
+                return str(source[key])
+    return str(source)
+
+
+def is_relevant_event(text):
+    if not text:
+        return False
+
+    text_lower = text.lower()
+    return bool(re.search(r"\b(crashloopbackoff|imagepullbackoff|pending|failed|error|fail|backoff|oomkilled|oom|unschedulable|not ready|evicted|deadlineexceeded)\b", text_lower))
 
 # ==================================
 # OpenSearch Logs
@@ -56,13 +99,13 @@ def get_logs():
 
     for hit in data["hits"]["hits"]:
         source = hit["_source"]
+        text = extract_log_text(source)
 
-        if "message" in source:
-            logs.append(source["message"])
-        elif "log" in source:
-            logs.append(source["log"])
-        else:
-            logs.append(str(source))
+        if is_relevant_log(text):
+            logs.append(text)
+
+    if not logs:
+        return ["No relevant error logs found."]
 
     return logs
 
@@ -99,10 +142,14 @@ def get_events():
     events = []
 
     for hit in data["hits"]["hits"]:
-
         source = hit["_source"]
+        text = extract_event_text(source)
 
-        events.append(str(source))
+        if is_relevant_event(text):
+            events.append(text)
+
+    if not events:
+        return ["No relevant Kubernetes events found."]
 
     return events
 

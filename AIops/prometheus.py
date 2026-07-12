@@ -46,6 +46,26 @@ def extract_metric_value(result):
 
 
 # ==================================
+# Metric utilities
+# ==================================
+
+def compute_percentage_change(current, baseline):
+    if current is None or baseline is None or baseline == 0:
+        return None
+    return ((current - baseline) / baseline) * 100
+
+
+def build_metric_anomaly(name, current, baseline, change):
+    if change is None:
+        return None
+
+    return (
+        f"{name} spike detected: current={current:.3f}, baseline={baseline:.3f}, "
+        f"increase={change:.1f}%"
+    )
+
+
+# ==================================
 # Get Metrics
 # ==================================
 
@@ -53,30 +73,56 @@ def get_metrics():
 
     metrics = {}
 
-    # CPU
-    cpu_usage_cores = query_prometheus(
-        "sum(rate(container_cpu_usage_seconds_total[5m]))"
+    # CPU current and baseline
+    cpu_current = query_prometheus(
+        "sum(rate(container_cpu_usage_seconds_total[1m]))"
+    )
+    cpu_baseline = query_prometheus(
+        "avg_over_time(sum(rate(container_cpu_usage_seconds_total[1m]))[15m])"
     )
 
-    # Memory
-    memory_usage_bytes = query_prometheus(
+    # Memory current and baseline
+    memory_current = query_prometheus(
         "sum(container_memory_working_set_bytes)"
     )
-
-    # Restart Count
-    container_restarts = query_prometheus(
-        "sum(kube_pod_container_status_restarts_total)"
+    memory_baseline = query_prometheus(
+        "avg_over_time(sum(container_memory_working_set_bytes)[15m])"
     )
 
-    #latency
-    latency_seconds = query_prometheus(
+    # Latency current and baseline
+    latency_current = query_prometheus(
         "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))"
     )
+    latency_baseline = query_prometheus(
+        "avg_over_time(histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))[15m])"
+    )
 
-    metrics["cpu_usage_cores"] = extract_metric_value(cpu_usage_cores)
-    metrics["memory_usage_bytes"] = extract_metric_value(memory_usage_bytes)
-    metrics["container_restarts"] = extract_metric_value(container_restarts)
-    metrics["latency_seconds"] = extract_metric_value(latency_seconds)
+    metrics["cpu_current"] = extract_metric_value(cpu_current)
+    metrics["cpu_baseline"] = extract_metric_value(cpu_baseline)
+    metrics["memory_current"] = extract_metric_value(memory_current)
+    metrics["memory_baseline"] = extract_metric_value(memory_baseline)
+    metrics["latency_current"] = extract_metric_value(latency_current)
+    metrics["latency_baseline"] = extract_metric_value(latency_baseline)
+
+    anomalies = []
+
+    cpu_change = compute_percentage_change(metrics["cpu_current"], metrics["cpu_baseline"])
+    memory_change = compute_percentage_change(metrics["memory_current"], metrics["memory_baseline"])
+    latency_change = compute_percentage_change(metrics["latency_current"], metrics["latency_baseline"])
+
+    metrics["cpu_change_pct"] = cpu_change
+    metrics["memory_change_pct"] = memory_change
+    metrics["latency_change_pct"] = latency_change
+
+    # thresholds for sudden increases
+    if cpu_change is not None and cpu_change > 20:
+        anomalies.append(build_metric_anomaly("CPU usage", metrics["cpu_current"], metrics["cpu_baseline"], cpu_change))
+    if memory_change is not None and memory_change > 20:
+        anomalies.append(build_metric_anomaly("Memory usage", metrics["memory_current"], metrics["memory_baseline"], memory_change))
+    if latency_change is not None and latency_change > 20:
+        anomalies.append(build_metric_anomaly("95th percentile latency", metrics["latency_current"], metrics["latency_baseline"], latency_change))
+
+    metrics["anomalies"] = [a for a in anomalies if a is not None]
 
     return metrics
 
